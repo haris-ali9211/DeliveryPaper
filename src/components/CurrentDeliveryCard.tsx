@@ -15,7 +15,7 @@ export const CurrentDeliveryCard: React.FC<CurrentDeliveryCardProps> = ({
   const isMultiPub = stop.publications.length > 1;
 
   return (
-    <div className="w-full flex flex-col justify-between rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300/80 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-5 sm:p-7 md:p-8 transition-all">
+    <div className="w-full flex flex-col justify-between rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300/80 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-4 sm:p-6 md:p-8 transition-all">
       {/* Top Meta: Stop Number & Optional Next Street Transition */}
       <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800/80 pb-3 mb-4">
         <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-xs font-semibold tracking-wider uppercase">
@@ -32,12 +32,12 @@ export const CurrentDeliveryCard: React.FC<CurrentDeliveryCardProps> = ({
       </div>
 
       {/* Main Focus Area: Address & Customer */}
-      <div className="text-center my-1 sm:my-2">
-        <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-sans">
+      <div className="text-center my-1 sm:my-2 px-1">
+        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-sans truncate sm:whitespace-normal">
           {stop.street} {stop.houseNumber}
         </h1>
 
-        <div className="mt-2 text-lg sm:text-xl font-medium text-slate-600 dark:text-slate-300">
+        <div className="mt-1.5 text-base sm:text-lg font-medium text-slate-600 dark:text-slate-300 truncate">
           {stop.customer}
         </div>
       </div>
