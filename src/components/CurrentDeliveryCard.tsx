@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import type { DeliveryStop } from '../types/route';
 import { DeliveryNote } from './DeliveryNote';
-import { Compass, Layers, CornerDownRight } from 'lucide-react';
+import { Compass, Layers, CornerDownRight, Copy, Check } from 'lucide-react';
 
 interface CurrentDeliveryCardProps {
   stop: DeliveryStop;
@@ -13,6 +13,35 @@ export const CurrentDeliveryCard: React.FC<CurrentDeliveryCardProps> = ({
   nextStreetTransition,
 }) => {
   const isMultiPub = stop.publications.length > 1;
+  const [copied, setCopied] = useState(false);
+
+  // Reset copied state when stop changes
+  useEffect(() => {
+    setCopied(false);
+  }, [stop.id]);
+
+  const handleCopyAddress = async () => {
+    const fullAddress = `${stop.street} ${stop.houseNumber}`;
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(fullAddress);
+      } else {
+        const textArea = document.createElement('textarea');
+        textArea.value = fullAddress;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+      }
+      setCopied(true);
+      if ('vibrate' in navigator) {
+        navigator.vibrate(25);
+      }
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Ignore clipboard write failures
+    }
+  };
 
   return (
     <div className="w-full flex flex-col justify-between rounded-2xl bg-white dark:bg-slate-900 border-2 border-slate-300/80 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none p-4 sm:p-6 md:p-8 transition-all">
@@ -31,13 +60,37 @@ export const CurrentDeliveryCard: React.FC<CurrentDeliveryCardProps> = ({
         )}
       </div>
 
-      {/* Main Focus Area: Address & Customer */}
-      <div className="text-center my-1 sm:my-2 px-1">
-        <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-sans truncate sm:whitespace-normal">
-          {stop.street} {stop.houseNumber}
-        </h1>
+      {/* Main Focus Area: Address (Clickable to Copy) & Customer */}
+      <div className="text-center my-1 sm:my-2 px-1 flex flex-col items-center">
+        <button
+          type="button"
+          onClick={handleCopyAddress}
+          title="Click to copy address"
+          className="group relative inline-flex items-center justify-center gap-2 max-w-full px-2.5 py-1 -mx-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/70 active:scale-[0.98] transition-all cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+        >
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight uppercase font-sans truncate sm:whitespace-normal">
+            {stop.street} {stop.houseNumber}
+          </h1>
 
-        <div className="mt-1.5 text-base sm:text-lg font-medium text-slate-600 dark:text-slate-300 truncate">
+          <span
+            className={`inline-flex items-center gap-1 text-[11px] font-bold px-2 py-0.5 rounded-full transition-all flex-shrink-0 ${
+              copied
+                ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-500/40'
+                : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200'
+            }`}
+          >
+            {copied ? (
+              <>
+                <Check className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 stroke-[3]" />
+                <span>Copied!</span>
+              </>
+            ) : (
+              <Copy className="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-opacity" />
+            )}
+          </span>
+        </button>
+
+        <div className="mt-1 text-base sm:text-lg font-medium text-slate-600 dark:text-slate-300 truncate max-w-full">
           {stop.customer}
         </div>
       </div>
