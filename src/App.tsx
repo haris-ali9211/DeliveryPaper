@@ -49,7 +49,13 @@ export function App() {
     const saved = localStorage.getItem(STORAGE_KEYS.ROUTE_DATA);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // If user had the previous default sample route, update to the new sequence
+        if (parsed?.route?.Tour === '1510' && parsed?.entries?.[0]?.street === 'Droste-Hülshoff-Str.') {
+          localStorage.setItem(STORAGE_KEYS.ROUTE_DATA, JSON.stringify(SAMPLE_ROUTE_DATA));
+          return SAMPLE_ROUTE_DATA;
+        }
+        return parsed;
       } catch {
         return SAMPLE_ROUTE_DATA;
       }
