@@ -23,6 +23,7 @@ const STORAGE_KEYS = {
   THEME: 'ze_theme_preference',
   GROUP_MULTI: 'ze_group_multipaper',
   HAPTIC: 'ze_haptic_feedback',
+  CUSTOM_ORDER: 'ze_custom_stops_order',
 };
 
 export function App() {
@@ -63,10 +64,34 @@ export function App() {
     return SAMPLE_ROUTE_DATA;
   });
 
-  // Processed stops
-  const stops: DeliveryStop[] = useMemo(() => {
+  // Processed default stops from JSON
+  const defaultStops: DeliveryStop[] = useMemo(() => {
     return buildDeliveryStops(routeData, groupMultiPapers);
   }, [routeData, groupMultiPapers]);
+
+  // User reordered/customized stops sequence
+  const [customStops, setCustomStops] = useState<DeliveryStop[] | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.CUSTOM_ORDER);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed;
+        }
+      } catch {
+        // ignore
+      }
+    }
+    return null;
+  });
+
+  // Effective stops sequence (custom if valid, otherwise default)
+  const stops: DeliveryStop[] = useMemo(() => {
+    if (customStops && customStops.length === defaultStops.length) {
+      return customStops;
+    }
+    return defaultStops;
+  }, [customStops, defaultStops]);
 
   // Current delivery index
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -168,9 +193,33 @@ export function App() {
     }
   }, [stops.length, triggerHaptic]);
 
+  // Handle Reordering Stops (Drag or Swap)
+  const handleReorderStops = useCallback((newStops: DeliveryStop[]) => {
+    const currentStopId = stops[currentIndex]?.id;
+    const updated = newStops.map((s, idx) => ({ ...s, stopNumber: idx + 1 }));
+
+    // Keep current index tracking the same physical stop if possible
+    if (currentStopId) {
+      const newIdx = updated.findIndex(s => s.id === currentStopId);
+      if (newIdx !== -1) {
+        setCurrentIndex(newIdx);
+      }
+    }
+
+    setCustomStops(updated);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_ORDER, JSON.stringify(updated));
+  }, [stops, currentIndex]);
+
+  const handleResetStopsOrder = useCallback(() => {
+    setCustomStops(null);
+    localStorage.removeItem(STORAGE_KEYS.CUSTOM_ORDER);
+  }, []);
+
   // Handle Route Load
   const handleLoadNewRoute = (data: RawRouteData) => {
     setRouteData(data);
+    setCustomStops(null);
+    localStorage.removeItem(STORAGE_KEYS.CUSTOM_ORDER);
     localStorage.setItem(STORAGE_KEYS.ROUTE_DATA, JSON.stringify(data));
     setCurrentIndex(0);
     setCompletedStops(new Set());
